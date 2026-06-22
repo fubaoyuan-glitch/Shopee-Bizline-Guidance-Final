@@ -1,0 +1,287 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ShopeeFood Animated Entry - Pop Lift</title>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+
+      :root {
+        --phone-w: 375px;
+        --phone-h: 816px;
+        --ink: #1f0f08;
+      }
+
+      @property --border-angle {
+        syntax: "<angle>";
+        initial-value: 0deg;
+        inherits: false;
+      }
+
+      body {
+        min-height: 100vh;
+        margin: 0;
+        display: grid;
+        place-items: center;
+        overflow: hidden;
+        background: #fff;
+        font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", Inter, Arial, sans-serif;
+      }
+
+      .stage {
+        width: min(var(--phone-w), 100vw);
+        height: min(var(--phone-h), 100vh);
+        display: grid;
+        place-items: center;
+      }
+
+      .phone {
+        position: relative;
+        width: var(--phone-w);
+        height: var(--phone-h);
+        overflow: hidden;
+        background: #fff;
+      }
+
+      .base,
+      .guide-layer {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+      }
+
+      .base {
+        z-index: 0;
+      }
+
+      .guide-layer {
+        z-index: 1;
+        opacity: 0;
+        pointer-events: none;
+        will-change: opacity;
+      }
+
+      .overlay-click {
+        position: absolute;
+        inset: 0;
+        z-index: 5;
+        border: 0;
+        padding: 0;
+        background: transparent;
+        cursor: pointer;
+        opacity: 0;
+        pointer-events: none;
+      }
+
+      .food-focus {
+        position: absolute;
+        left: 79px;
+        top: 164px;
+        z-index: 3;
+        width: 74px;
+        height: 80px;
+        opacity: 0;
+        pointer-events: none;
+        filter: drop-shadow(0 14px 18px rgba(107, 43, 12, 0.168)) drop-shadow(0 8px 18px rgba(255, 104, 55, 0.196));
+        transform-origin: center;
+        will-change: opacity, transform, filter;
+      }
+
+      .food-border {
+        position: absolute;
+        inset: -3px;
+        z-index: 2;
+        border-radius: 20px;
+        padding: 3px;
+        background: conic-gradient(
+          from var(--border-angle),
+          #ff8a00 0deg,
+          #ff4d5f 88deg,
+          #ffb12a 178deg,
+          #ffbf35 268deg,
+          #ff8a00 360deg
+        );
+        pointer-events: none;
+        -webkit-mask:
+          linear-gradient(#000 0 0) content-box,
+          linear-gradient(#000 0 0);
+        -webkit-mask-composite: xor;
+        mask-composite: exclude;
+        animation: border-flow 1.35s linear infinite;
+      }
+
+      .food-entry {
+        position: absolute;
+        left: 0;
+        top: 0;
+        z-index: 1;
+        width: 100%;
+        height: 100%;
+        object-fit: fill;
+        display: block;
+        border-radius: 10px;
+      }
+
+      .food-copy {
+        position: absolute;
+        left: 38px;
+        top: 259px;
+        z-index: 4;
+        width: 286px;
+        margin: 0;
+        color: var(--ink);
+        font-size: 20px;
+        font-weight: 900;
+        font-style: italic;
+        letter-spacing: 0;
+        line-height: 1.03;
+        pointer-events: none;
+      }
+
+      .line {
+        display: block;
+        overflow: hidden;
+        white-space: nowrap;
+      }
+
+      .line + .line {
+        margin-top: 4px;
+      }
+
+      .word {
+        display: inline-block;
+        opacity: 0;
+        transform: none;
+        filter: blur(5px);
+        transform-origin: left bottom;
+        will-change: opacity, transform, filter;
+      }
+
+      .accent {
+        color: #EE4D2D;
+      }
+
+      @keyframes border-flow {
+        to {
+          --border-angle: 360deg;
+        }
+      }
+
+      @media (max-width: 430px), (max-height: 840px) {
+        body {
+          overflow: auto;
+        }
+
+        .phone {
+          transform: scale(min(calc(100vw / 375), calc(100vh / 816)));
+          transform-origin: center;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="stage" aria-label="ShopeeFood entry guidance animation preview">
+      <section class="phone">
+        <img class="base" src="assets/shopeefood-homepage-base.png" alt="" aria-hidden="true" />
+        <img class="guide-layer" src="assets/shopeefood-mask-source-1.png" alt="" aria-hidden="true" />
+
+        <div class="food-focus" aria-hidden="true">
+          <div class="food-border"></div>
+          <img class="food-entry" src="assets/shopeefood-entry-source.png" alt="" />
+        </div>
+
+        <h1 class="food-copy" aria-label="Get Your Order Delivered Now!">
+          <span class="line">
+            <span class="word">Get</span>
+            <span class="word">Your</span>
+            <span class="word accent">Order</span>
+          </span>
+          <span class="line">
+            <span class="word accent">Delivered</span>
+            <span class="word">Now!</span>
+            <span class="word">🍔</span>
+          </span>
+        </h1>
+
+        <button class="overlay-click" type="button" aria-label="Dismiss ShopeeFood guidance"></button>
+      </section>
+    </main>
+
+    <script src="assets/gsap.min.js"></script>
+    <script>
+      const guideLayer = document.querySelector(".guide-layer");
+      const foodFocus = document.querySelector(".food-focus");
+      const words = gsap.utils.toArray(".word");
+      const clickLayer = document.querySelector(".overlay-click");
+
+      let holdTween;
+      let clickedToDismiss = false;
+
+      const intro = gsap.timeline({
+        paused: true,
+        defaults: { overwrite: "auto" }
+      });
+
+      intro
+        .set(clickLayer, { pointerEvents: "auto" })
+        .set(words, { opacity: 0, yPercent: 110, scale: 0.86, filter: "blur(5px)" })
+        .to(guideLayer, { opacity: 1, duration: 0.52, ease: "power2.out" }, 0)
+        .fromTo(foodFocus, { opacity: 0, scale: 0.88, y: 4 }, { opacity: 1, scale: 1.04, y: 0, duration: 0.42, ease: "back.out(1.8)" }, 0.1)
+        .to(foodFocus, { scale: 1, duration: 0.22, ease: "power2.out" }, 0.52)
+        .to(words, {
+          opacity: 1,
+          yPercent: 0,
+          scale: 1,
+          filter: "blur(0px)",
+          duration: 0.5,
+          ease: "back.out(1.65)",
+          stagger: { each: 0.055, from: "start" }
+        }, 0.48);
+
+      function resetGuide({ replay = false } = {}) {
+        if (holdTween) {
+          holdTween.kill();
+          holdTween = null;
+        }
+
+        gsap.timeline({ defaults: { overwrite: "auto" } })
+          .set(clickLayer, { pointerEvents: "none" })
+          .to(words, {
+          opacity: 0,
+          yPercent: -70,
+          filter: "blur(3px)",
+          duration: 0.42,
+          ease: "power2.in",
+          stagger: { each: 0.03, from: "end" }
+        }, 0)
+          .to(foodFocus, { opacity: 0, scale: 0.92, y: -3, duration: 0.3, ease: "power2.in" }, 0.08)
+          .to(guideLayer, { opacity: 0, duration: 0.42, ease: "power2.inOut" }, 0.18)
+          .set(words, { opacity: 0, yPercent: 110, scale: 0.86, filter: "blur(5px)" })
+          .call(() => {
+            if (replay && !clickedToDismiss) {
+              gsap.delayedCall(1.2, playGuide);
+            }
+          });
+      }
+
+      function playGuide() {
+        clickedToDismiss = false;
+        intro.restart();
+        holdTween = gsap.delayedCall(10, () => resetGuide({ replay: true }));
+      }
+
+      clickLayer.addEventListener("click", () => {
+        clickedToDismiss = true;
+        resetGuide({ replay: false });
+      });
+
+      gsap.delayedCall(0.48, playGuide);
+    </script>
+  </body>
+</html>
